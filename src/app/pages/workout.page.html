@@ -1,0 +1,240 @@
+@if (session(); as current) {
+  <section class="page">
+    <p class="kicker">{{ current.status === 'active' ? i18n.t('workout') : i18n.t('done') }}</p>
+    <h1>{{ i18n.dayName(current.programDayId, current.dayName, current.dayNames) }}</h1>
+    <p class="lede">{{ i18n.dayFocus(current.programDayId, current.focus, current.focuses) }}</p>
+    <p class="muted">
+      {{ i18n.formatWhen(current.performedAt) }}
+      · {{ current.mode === 'live' ? i18n.t('inGym') : i18n.t('byMemory') }}
+      · {{ loggedCount(current) }}/{{ plannedCount(current) }}
+    </p>
+    <div class="meter" aria-hidden="true"><span [style.width.%]="progress()"></span></div>
+
+    @for (exercise of current.exercises; track exercise.id; let index = $index) {
+      <article class="card" [class.open]="openId() === exercise.id">
+        <button type="button" class="card-head" (click)="toggle(exercise.id)">
+          <span class="idx">{{ index + 1 }}</span>
+          <app-exercise-art
+            [exerciseId]="exercise.programExerciseId"
+            [name]="i18n.exerciseName(exercise.programExerciseId, exercise.name, exercise.names)"
+          />
+          <span class="card-title">
+            <strong>{{ i18n.exerciseName(exercise.programExerciseId, exercise.name, exercise.names) }}</strong>
+            <small>{{ i18n.formatTarget(exercise) }}</small>
+          </span>
+          <span class="count" [class.done]="exercise.logs.length >= exercise.sets.min">
+            {{ exercise.logs.length }}/{{ exercise.sets.max }}
+          </span>
+        </button>
+
+        @if (openId() === exercise.id) {
+          <div class="card-body">
+            <app-exercise-art
+              [exerciseId]="exercise.programExerciseId"
+              [name]="i18n.exerciseName(exercise.programExerciseId, exercise.name, exercise.names)"
+              [hero]="true"
+            />
+            @if (store.lastLogs(exercise.programExerciseId, current.id); as previous) {
+              <p class="prev-line">{{ i18n.t('lastTime', { value: i18n.formatLogs(previous) }) }}</p>
+            } @else {
+              <p class="prev-line">{{ i18n.t('firstLog') }}</p>
+            }
+            @if (replaced(exercise)) {
+              <p class="note">{{ insteadLabel(exercise) }}</p>
+            }
+            @if (exercise.note || exercise.notes) {
+              <p class="note">
+                {{ i18n.exerciseNote(exercise.programExerciseId, exercise.note, exercise.notes) }}
+              </p>
+            }
+            <div class="row-links">
+              <a class="text-link" [routerLink]="['/history/exercise', exercise.programExerciseId]">
+                {{ i18n.t('allTimes') }}
+              </a>
+              <button type="button" class="text-link" (click)="startRename(exercise)">
+                {{ i18n.t('changeExercise') }}
+              </button>
+              @if (replaced(exercise)) {
+                <button type="button" class="text-link" (click)="restoreExercise(exercise)">
+                  {{ i18n.t('restorePlan') }}
+                </button>
+              }
+            </div>
+
+            @if (renamingId() === exercise.id) {
+              <form class="panel" (submit)="$event.preventDefault(); saveCustomName(exercise)">
+                <label>
+                  {{ i18n.t('name') }}
+                  <input [value]="renameDraft()" (input)="onRename($event)" />
+                </label>
+                <button type="submit" class="btn primary">{{ i18n.t('saveName') }}</button>
+                <p class="panel-title">{{ i18n.t('pickExercise') }}</p>
+                <ul class="swap-grid">
+                  @for (option of alternatives(exercise); track option.id) {
+                    <li>
+                      <button type="button" (click)="chooseExercise(exercise, option)">
+                        <app-exercise-art
+                          [exerciseId]="option.id"
+                          [name]="i18n.exerciseName(option.id, option.name, option.names)"
+                          [tile]="true"
+                        />
+                        <span>{{ i18n.exerciseName(option.id, option.name, option.names) }}</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              </form>
+            }
+
+            @if (exercise.logs.length > 0) {
+              <ul class="sets">
+                @for (set of exercise.logs; track set.id; let setIndex = $index) {
+                  <li class="set-row">
+                    <span class="set-index">{{ setIndex + 1 }}</span>
+                    <button
+                      type="button"
+                      (click)="changeWeight(exercise, set, -1)"
+                      [attr.aria-label]="i18n.t('lessBy', { n: i18n.formatNum(exercise.weightStepKg) })"
+                    >
+                      −
+                    </button>
+                    <input
+                      class="tiny"
+                      type="text"
+                      inputmode="decimal"
+                      [value]="weightInput(set.weightKg)"
+                      (change)="editWeight(exercise, set, $event)"
+                      [attr.aria-label]="i18n.t('weightKg')"
+                    />
+                    <button
+                      type="button"
+                      (click)="changeWeight(exercise, set, 1)"
+                      [attr.aria-label]="i18n.t('moreBy', { n: i18n.formatNum(exercise.weightStepKg) })"
+                    >
+                      +
+                    </button>
+                    <span class="times">×</span>
+                    <button
+                      type="button"
+                      (click)="changeReps(exercise, set, -1)"
+                      [attr.aria-label]="i18n.t('lessReps')"
+                    >
+                      −
+                    </button>
+                    <input
+                      class="tiny reps"
+                      type="text"
+                      inputmode="numeric"
+                      [value]="set.reps"
+                      (change)="editReps(exercise, set, $event)"
+                      [attr.aria-label]="i18n.t('reps')"
+                    />
+                    <button
+                      type="button"
+                      (click)="changeReps(exercise, set, 1)"
+                      [attr.aria-label]="i18n.t('moreReps')"
+                    >
+                      +
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-danger"
+                      (click)="remove(exercise, set)"
+                      [attr.aria-label]="i18n.t('removeSet')"
+                    >
+                      ×
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+
+            <div class="composer">
+              <div class="stepper">
+                <button
+                  type="button"
+                  (click)="nudgeWeight(exercise, -1)"
+                  [attr.aria-label]="i18n.t('lessBy', { n: i18n.formatNum(exercise.weightStepKg) })"
+                >
+                  −
+                </button>
+                <label>
+                  {{ i18n.t('weightKg') }}
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    [value]="weightInput(draftWeight())"
+                    (change)="onDraftWeight($event)"
+                    (keydown.enter)="commit(exercise)"
+                  />
+                </label>
+                <button
+                  type="button"
+                  (click)="nudgeWeight(exercise, 1)"
+                  [attr.aria-label]="i18n.t('moreBy', { n: i18n.formatNum(exercise.weightStepKg) })"
+                >
+                  +
+                </button>
+              </div>
+              <div class="stepper">
+                <button type="button" (click)="nudgeReps(-1)" [attr.aria-label]="i18n.t('lessReps')">
+                  −
+                </button>
+                <label>
+                  {{ i18n.t('reps') }}
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    [value]="draftReps()"
+                    (change)="onDraftReps($event)"
+                    (keydown.enter)="commit(exercise)"
+                  />
+                </label>
+                <button type="button" (click)="nudgeReps(1)" [attr.aria-label]="i18n.t('moreReps')">
+                  +
+                </button>
+              </div>
+            </div>
+            <button type="button" class="btn primary" (click)="commit(exercise)">
+              {{ i18n.t('logSet', { n: exercise.logs.length + 1 }) }}
+            </button>
+          </div>
+        }
+      </article>
+    }
+
+    @if (finishError()) {
+      <p class="error">{{ finishError() }}</p>
+    }
+
+    @if (current.status === 'active') {
+      <div class="actions end">
+        @if (confirm() === 'finish') {
+          <p class="note">{{ i18n.t('finishConfirm') }}</p>
+          <button type="button" class="btn primary" (click)="finish()">{{ i18n.t('yesFinish') }}</button>
+          <button type="button" class="btn ghost" (click)="confirm.set(null)">{{ i18n.t('back') }}</button>
+        } @else if (confirm() === 'cancel') {
+          <p class="note">{{ i18n.t('cancelConfirm') }}</p>
+          <button type="button" class="btn danger" (click)="cancel()">{{ i18n.t('yesCancel') }}</button>
+          <button type="button" class="btn ghost" (click)="confirm.set(null)">{{ i18n.t('back') }}</button>
+        } @else {
+          <button type="button" class="btn primary" (click)="confirm.set('finish')">
+            {{ i18n.t('finishWorkout') }}
+          </button>
+          <button type="button" class="btn ghost" (click)="confirm.set('cancel')">
+            {{ i18n.t('cancel') }}
+          </button>
+        }
+      </div>
+    } @else {
+      <div class="actions">
+        <a class="btn ghost" routerLink="/history">{{ i18n.t('toHistory') }}</a>
+      </div>
+    }
+  </section>
+} @else {
+  <section class="page">
+    <h1>{{ i18n.t('workoutMissing') }}</h1>
+    <a class="btn ghost" routerLink="/">{{ i18n.t('toToday') }}</a>
+  </section>
+}

@@ -1,0 +1,18 @@
+@if (store.program(); as program) {
+  <section class="page">
+    <p class="kicker">{{ i18n.t('programTitle') }}</p>
+    <h1>{{ i18n.programName(program.name) }}</h1>
+    <p class="lede">{{ i18n.t('programHint') }}</p>
+    <ul class="list">
+      @for (day of program.days; track day.id) {
+        <li>
+          <a [routerLink]="['/program', day.id]">
+            <strong>{{ i18n.dayName(day.id, day.name, day.names) }}</strong>
+            <small>{{ i18n.dayFocus(day.id, day.focus, day.focuses) }}</small>
+            <small class="prev">{{ i18n.t('exerciseCount', { n: day.exercises.length }) }}</small>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+}

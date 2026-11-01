@@ -1,0 +1,174 @@
+@if (draft(); as day) {
+  <section class="page">
+    <p class="kicker">{{ i18n.t('editor') }}</p>
+
+    <div class="edit-lang">
+      <p class="muted">{{ i18n.t('editLanguage') }}</p>
+      <div class="lang" role="group" [attr.aria-label]="i18n.t('editLanguage')">
+        @for (code of i18n.locales; track code) {
+          <button
+            type="button"
+            class="lang-btn"
+            [class.active]="editLocale() === code"
+            (click)="setEditLocale(code)"
+          >
+            {{ i18n.labels[code] }}
+          </button>
+        }
+      </div>
+      <button
+        type="button"
+        class="btn ghost"
+        (click)="autoTranslate()"
+        [disabled]="translating()"
+      >
+        {{ translating() ? i18n.t('translating') : i18n.t('autoTranslate') }}
+      </button>
+      <p class="muted">{{ i18n.t('translateHint') }}</p>
+      @if (translateStatus()) {
+        <p class="ok">{{ translateStatus() }}</p>
+      }
+    </div>
+
+    <label>
+      {{ i18n.t('day') }}
+      <input [value]="dayField('name')" (input)="updateText('name', $event)" />
+    </label>
+    <label>
+      {{ i18n.t('focus') }}
+      <input [value]="dayField('focus')" (input)="updateText('focus', $event)" />
+    </label>
+
+    @for (exercise of day.exercises; track exercise.id; let index = $index) {
+      <article class="editor">
+        <div class="editor-top">
+          <span class="idx">{{ index + 1 }}</span>
+          <app-exercise-art
+            [exerciseId]="exercise.id"
+            [name]="exerciseField(exercise, 'name')"
+          ></app-exercise-art>
+          <button type="button" class="btn tiny" (click)="move(index, -1)" [disabled]="index === 0">
+            {{ i18n.t('up') }}
+          </button>
+          <button
+            type="button"
+            class="btn tiny"
+            (click)="move(index, 1)"
+            [disabled]="index === day.exercises.length - 1"
+          >
+            {{ i18n.t('down') }}
+          </button>
+          <button type="button" class="btn tiny danger" (click)="remove(exercise.id)">
+            {{ i18n.t('remove') }}
+          </button>
+        </div>
+        <label>
+          {{ i18n.t('exercise') }}
+          <input
+            [value]="exerciseField(exercise, 'name')"
+            (input)="updateExerciseText(exercise.id, 'name', $event)"
+          />
+        </label>
+        <div class="split four">
+          <label>
+            {{ i18n.t('setsFrom') }}
+            <input
+              type="number"
+              min="1"
+              step="1"
+              [value]="exercise.sets.min"
+              (change)="updateBound(exercise.id, 'sets', 'min', $event)"
+            />
+          </label>
+          <label>
+            {{ i18n.t('setsTo') }}
+            <input
+              type="number"
+              min="1"
+              step="1"
+              [value]="exercise.sets.max"
+              (change)="updateBound(exercise.id, 'sets', 'max', $event)"
+            />
+          </label>
+          <label>
+            {{ i18n.t('repsFrom') }}
+            <input
+              type="number"
+              min="1"
+              step="1"
+              [value]="exercise.reps.min"
+              (change)="updateBound(exercise.id, 'reps', 'min', $event)"
+            />
+          </label>
+          <label>
+            {{ i18n.t('repsTo') }}
+            <input
+              type="number"
+              min="1"
+              step="1"
+              [value]="exercise.reps.max"
+              (change)="updateBound(exercise.id, 'reps', 'max', $event)"
+            />
+          </label>
+        </div>
+        <div class="split">
+          <label>
+            {{ i18n.t('restFrom') }}
+            <input
+              type="number"
+              min="0.5"
+              step="0.5"
+              [value]="exercise.restMin.min"
+              (change)="updateBound(exercise.id, 'restMin', 'min', $event)"
+            />
+          </label>
+          <label>
+            {{ i18n.t('restTo') }}
+            <input
+              type="number"
+              min="0.5"
+              step="0.5"
+              [value]="exercise.restMin.max"
+              (change)="updateBound(exercise.id, 'restMin', 'max', $event)"
+            />
+          </label>
+          <label>
+            {{ i18n.t('weightStep') }}
+            <input
+              type="number"
+              min="0.25"
+              step="0.25"
+              [value]="exercise.weightStepKg"
+              (change)="updateStep(exercise.id, $event)"
+            />
+          </label>
+        </div>
+        <label>
+          {{ i18n.t('note') }}
+          <textarea
+            rows="2"
+            [value]="exerciseField(exercise, 'note')"
+            (input)="updateExerciseText(exercise.id, 'note', $event)"
+          ></textarea>
+        </label>
+      </article>
+    }
+
+    <button type="button" class="btn ghost" (click)="addExercise()">{{ i18n.t('addExercise') }}</button>
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+    @if (saved()) {
+      <p class="ok">{{ i18n.t('saved') }}</p>
+    }
+    <div class="actions">
+      <button type="button" class="btn primary" (click)="save()">{{ i18n.t('saveDay') }}</button>
+      <a class="btn ghost" routerLink="/program">{{ i18n.t('back') }}</a>
+    </div>
+  </section>
+} @else {
+  <section class="page">
+    <h1>{{ i18n.t('dayMissing') }}</h1>
+    <a class="btn ghost" routerLink="/program">{{ i18n.t('toProgram') }}</a>
+  </section>
+}

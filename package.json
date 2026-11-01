@@ -1,0 +1,40 @@
+{
+  "name": "gym-care",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "start:lan": "ng serve --host 0.0.0.0",
+    "build": "ng build",
+    "build:pages": "ng build --base-href=/gym-care/ && node scripts/prepare-pages.mjs",
+    "start:pwa": "ng build && npx --yes serve dist/gym-care/browser -l 4173",
+    "sync-server": "node server/index.mjs",
+    "deploy:pages": "npm run build:pages && npx --yes angular-cli-ghpages --dir=dist/gym-care/browser --no-silent",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "private": true,
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
+  "packageManager": "npm@10.9.9",
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@angular/service-worker": "^22.2.0",
+    "dexie": "^4.4.7",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.5",
+    "@angular/cli": "^22.2.5",
+    "@angular/compiler-cli": "^22.2.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2"
+  }
+}

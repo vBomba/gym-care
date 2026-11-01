@@ -1,0 +1,79 @@
+@if (store.activeSession(); as active) {
+  <section class="page">
+    <p class="kicker">{{ i18n.t('ongoing') }}</p>
+    <h1>{{ i18n.dayName(active.programDayId, active.dayName, active.dayNames) }}</h1>
+    <p class="lede">{{ i18n.dayFocus(active.programDayId, active.focus, active.focuses) }}</p>
+    <p class="muted">{{ i18n.pluralSets(loggedCount(active)) }}.</p>
+    <div class="actions">
+      <a class="btn primary" [routerLink]="['/workout', active.id]">{{ i18n.t('continue') }}</a>
+      @if (!confirmCancel()) {
+        <button type="button" class="btn ghost" (click)="confirmCancel.set(true)">
+          {{ i18n.t('cancelWorkout') }}
+        </button>
+      } @else {
+        <p class="note">{{ i18n.t('cancelSetsGone') }}</p>
+        <button type="button" class="btn danger" (click)="cancelActive()">{{ i18n.t('yesCancel') }}</button>
+        <button type="button" class="btn ghost" (click)="confirmCancel.set(false)">{{ i18n.t('keep') }}</button>
+      }
+    </div>
+  </section>
+} @else if (day(); as current) {
+  <section class="page">
+    <p class="kicker">{{ i18n.t('today') }}</p>
+    <h1>{{ i18n.dayName(current.id, current.name, current.names) }}</h1>
+    <p class="lede">{{ i18n.dayFocus(current.id, current.focus, current.focuses) }}</p>
+    <div class="actions">
+      <button type="button" class="btn primary" (click)="startLive()">{{ i18n.t('startWorkout') }}</button>
+      <button type="button" class="btn ghost" (click)="recallOpen.set(!recallOpen())">
+        {{ i18n.t('logLater') }}
+      </button>
+      @if (otherDay(); as other) {
+        <button type="button" class="btn ghost" (click)="switchDay()">
+          {{ i18n.t('switchTo', { name: i18n.dayName(other.id, other.name, other.names) }) }}
+        </button>
+      }
+    </div>
+
+    @if (recallOpen()) {
+      <form class="panel" (submit)="$event.preventDefault(); startRecalled()">
+        <p class="panel-title">{{ i18n.t('fromMemory') }}</p>
+        <p class="muted">{{ i18n.t('recallHint') }}</p>
+        <div class="split">
+          <label>
+            {{ i18n.t('date') }}
+            <input type="date" [value]="recallDate()" (input)="onDate($event)" required />
+          </label>
+          <label>
+            {{ i18n.t('startTime') }}
+            <input type="time" [value]="recallTime()" (input)="onTime($event)" required />
+          </label>
+        </div>
+        @if (recallError()) {
+          <p class="error">{{ recallError() }}</p>
+        }
+        <button type="submit" class="btn primary">{{ i18n.t('openRecord') }}</button>
+      </form>
+    }
+
+    <ol class="plan">
+      @for (exercise of current.exercises; track exercise.id; let index = $index) {
+        <li>
+          <span class="idx">{{ index + 1 }}</span>
+          <app-exercise-art
+            [exerciseId]="exercise.id"
+            [name]="i18n.exerciseName(exercise.id, exercise.name, exercise.names)"
+          />
+          <span>
+            <strong>{{ i18n.exerciseName(exercise.id, exercise.name, exercise.names) }}</strong>
+            <small>{{ i18n.formatTarget(exercise) }}</small>
+            @if (store.lastLogs(exercise.id); as logs) {
+              <small class="prev">{{ i18n.t('lastTime', { value: i18n.formatLogs(logs) }) }}</small>
+            } @else {
+              <small class="prev">{{ i18n.t('neverDone') }}</small>
+            }
+          </span>
+        </li>
+      }
+    </ol>
+  </section>
+}

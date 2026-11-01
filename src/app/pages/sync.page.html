@@ -1,0 +1,58 @@
+<section class="page">
+  <p class="kicker">{{ i18n.t('syncTitle') }}</p>
+  <h1>{{ i18n.t('syncHeading') }}</h1>
+  <p class="lede">{{ i18n.t('syncHint') }}</p>
+
+  <div class="sync-card">
+    <p class="sync-status">{{ statusLabel() }}</p>
+    <p class="muted">{{ lastSyncLabel() }}</p>
+    @if (feedback()) {
+      <p [class.error]="sync.status() === 'error'" [class.ok-line]="sync.status() === 'ok'">
+        {{ feedback() }}
+      </p>
+    }
+  </div>
+
+  <div class="sync-card">
+    <label class="field">
+      <span>{{ i18n.t('syncServerUrl') }}</span>
+      <input
+        type="url"
+        [value]="sync.settings().url"
+        (input)="onUrl($event)"
+        [attr.placeholder]="i18n.t('syncServerPlaceholder')"
+        autocomplete="off"
+      />
+    </label>
+    <label class="field">
+      <span>{{ i18n.t('syncToken') }}</span>
+      <input
+        type="password"
+        [value]="sync.settings().token"
+        (input)="onToken($event)"
+        autocomplete="off"
+      />
+    </label>
+    <button
+      type="button"
+      class="btn primary"
+      [disabled]="sync.status() === 'syncing'"
+      (click)="sync.syncNow()"
+    >
+      {{ i18n.t('syncNow') }}
+    </button>
+  </div>
+
+  <div class="sync-card">
+    <p class="lede tight">{{ i18n.t('syncFileHint') }}</p>
+    <div class="actions">
+      <button type="button" class="btn" (click)="sync.exportFile()">
+        {{ i18n.t('syncExport') }}
+      </button>
+      <label class="btn file-btn">
+        {{ i18n.t('syncImport') }}
+        <input type="file" accept="application/json,.json" hidden (change)="onImport($event)" />
+      </label>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,50 @@
+<div class="app">
+  <header class="topbar">
+    <div>
+      <p class="brand">Gym Care</p>
+      <p class="brand-sub">{{ i18n.t('brandSub') }}</p>
+    </div>
+    <div class="lang" role="group" [attr.aria-label]="i18n.t('language')">
+      @for (code of i18n.locales; track code) {
+        <button
+          type="button"
+          class="lang-btn"
+          [class.active]="i18n.locale() === code"
+          (click)="setLocale(code)"
+        >
+          {{ i18n.labels[code] }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <main [class.has-rest]="timer.remainingSec() > 0">
+    @if (store.error()) {
+      <p class="error page">{{ store.error() }}</p>
+    } @else if (store.ready()) {
+      <router-outlet />
+    } @else {
+      <p class="muted page">{{ i18n.t('loading') }}</p>
+    }
+  </main>
+
+  @if (timer.remainingSec() > 0) {
+    <div class="rest-bar">
+      <div>
+        <p>{{ i18n.t('rest') }}</p>
+        <strong>{{ timer.label() }}</strong>
+      </div>
+      <div class="meter slim"><span [style.width.%]="timer.progress()"></span></div>
+      <button type="button" class="btn tiny" (click)="timer.skip()">{{ i18n.t('skip') }}</button>
+    </div>
+  }
+
+  <nav class="tabbar">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      {{ i18n.t('navToday') }}
+    </a>
+    <a routerLink="/history" routerLinkActive="active">{{ i18n.t('navHistory') }}</a>
+    <a routerLink="/program" routerLinkActive="active">{{ i18n.t('navProgram') }}</a>
+    <a routerLink="/sync" routerLinkActive="active">{{ i18n.t('navSync') }}</a>
+  </nav>
+</div>

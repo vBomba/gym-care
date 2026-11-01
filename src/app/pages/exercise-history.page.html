@@ -1,0 +1,48 @@
+<section class="page">
+  <p class="kicker">{{ i18n.t('exercise') }}</p>
+  <h1>{{ name() }}</h1>
+  <app-exercise-art [exerciseId]="exerciseId" [name]="name()" [hero]="true"></app-exercise-art>
+
+  @if (rows().length === 0) {
+    <p class="lede">{{ i18n.t('noSetsYet') }}</p>
+  } @else {
+    <section class="panel">
+      <p class="panel-title">{{ i18n.t('trends') }}</p>
+      <div class="metric-tabs">
+        <button type="button" class="chip" [class.active]="metric() === 'max'" (click)="setMetric('max')">
+          {{ i18n.t('trendMax') }}
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.active]="metric() === 'volume'"
+          (click)="setMetric('volume')"
+        >
+          {{ i18n.t('trendVolume') }}
+        </button>
+      </div>
+      <app-trend-chart
+        [points]="trendPoints()"
+        [title]="i18n.t('trends')"
+        [emptyText]="i18n.t('noTrends')"
+        [formatValue]="formatTrendValue"
+      />
+    </section>
+
+    <ul class="list">
+      @for (row of rows(); track row.id) {
+        <li>
+          <a [routerLink]="['/workout', row.id]">
+            <strong>{{ i18n.formatLogs(row.logs) }}</strong>
+            <small>
+              {{ i18n.formatWhen(row.when) }} · {{ i18n.dayName(row.dayId, row.dayName, row.dayNames) }}
+            </small>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+  <div class="actions">
+    <a class="btn ghost" routerLink="/history">{{ i18n.t('toHistory') }}</a>
+  </div>
+</section>

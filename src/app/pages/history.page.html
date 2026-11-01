@@ -1,0 +1,99 @@
+<section class="page">
+  <p class="kicker">{{ i18n.t('historyTitle') }}</p>
+  <h1>{{ i18n.t('workouts') }}</h1>
+
+  <section class="panel">
+    <div class="cal-head">
+      <p class="panel-title">{{ i18n.t('calendar') }}</p>
+      <div class="cal-nav">
+        <button type="button" class="btn tiny" (click)="shiftMonth(-1)" [attr.aria-label]="i18n.t('prevMonth')">
+          ‹
+        </button>
+        <strong>{{ monthLabel() }}</strong>
+        <button type="button" class="btn tiny" (click)="shiftMonth(1)" [attr.aria-label]="i18n.t('nextMonth')">
+          ›
+        </button>
+      </div>
+    </div>
+
+    <div class="cal-weekdays">
+      @for (label of weekdayLabels(); track $index) {
+        <span>{{ label }}</span>
+      }
+    </div>
+
+    <div class="cal-grid">
+      @for (week of weeks(); track $index) {
+        @for (date of week; track $index) {
+          @if (date) {
+            <button
+              type="button"
+              class="cal-day"
+              [class.has]="hasSession(date)"
+              [class.selected]="isSelected(date)"
+              [class.today]="isToday(date)"
+              [disabled]="!hasSession(date)"
+              (click)="selectDay(date)"
+            >
+              <span>{{ date.getDate() }}</span>
+              @if (sessionCount(date) > 0) {
+                <i class="cal-dot"></i>
+              }
+            </button>
+          } @else {
+            <span class="cal-day empty"></span>
+          }
+        }
+      }
+    </div>
+
+    @if (selectedDay()) {
+      <button type="button" class="text-link" (click)="clearDay()">{{ i18n.t('allDays') }}</button>
+    }
+  </section>
+
+  <section class="panel">
+    <p class="panel-title">{{ i18n.t('trends') }}</p>
+    <div class="metric-tabs">
+      <button type="button" class="chip" [class.active]="metric() === 'volume'" (click)="setMetric('volume')">
+        {{ i18n.t('trendVolume') }}
+      </button>
+      <button type="button" class="chip" [class.active]="metric() === 'max'" (click)="setMetric('max')">
+        {{ i18n.t('trendMax') }}
+      </button>
+      <button type="button" class="chip" [class.active]="metric() === 'sets'" (click)="setMetric('sets')">
+        {{ i18n.t('trendSets') }}
+      </button>
+    </div>
+    <app-trend-chart
+      [points]="trendPoints()"
+      [title]="i18n.t('trends')"
+      [emptyText]="i18n.t('noTrends')"
+      [formatValue]="formatTrendValue"
+    />
+  </section>
+
+  @if (store.completedSessions().length === 0) {
+    <p class="lede">{{ i18n.t('historyEmpty') }}</p>
+    <a class="btn primary" routerLink="/">{{ i18n.t('toToday') }}</a>
+  } @else {
+    <p class="panel-title">
+      {{ selectedDay() ? i18n.t('sessionsOnDay') : i18n.t('workouts') }}
+    </p>
+    <ul class="list">
+      @for (session of visibleSessions(); track session.id) {
+        <li>
+          <a [routerLink]="['/workout', session.id]">
+            <strong>{{ i18n.dayName(session.programDayId, session.dayName, session.dayNames) }}</strong>
+            <small>
+              {{ i18n.formatWhen(session.performedAt) }} · {{ i18n.pluralSets(loggedCount(session)) }}
+            </small>
+            <small class="prev">
+              {{ session.mode === 'live' ? i18n.t('inGym') : i18n.t('byMemory') }}
+            </small>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>
