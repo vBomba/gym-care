@@ -22,7 +22,10 @@ Production-збірка з service worker (офлайн і «Додати на �
 npm run start:pwa
 ```
 
-Відкрий `http://localhost:4173`. На iPhone Safari вимагає **HTTPS** (крім localhost), тому для залу зручніше викласти `dist/gym-care/browser` на будь-який HTTPS-хост або тунель. У Safari: Поділитися → На екран «Домой».
+Відкрий `http://localhost:4173`.
+
+Публічна HTTPS-збірка (GitHub Pages): [https://vbomba.github.io/gym-care/](https://vbomba.github.io/gym-care/).  
+На iPhone у Safari: Поділитися → На екран «Домой». Кожен push у `main` оновлює сайт через Actions.
 
 ### Синхронізація
 
